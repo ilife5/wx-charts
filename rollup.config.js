@@ -13,7 +13,7 @@ let banner = `/*
 export default {
   entry: 'src/app.js',
   format: 'cjs',
-  dest: 'dist/wxcharts.js',
+  dest: '/Users/jifeng/gitlab/mp-merak/utils/wxcharts.js',
   plugins: [
       babel({
           exclude: 'node_modules/**',

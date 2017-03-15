@@ -1,7 +1,7 @@
 import { splitPoints, getPieDataPoints, calYAxisData, getXAxisPoints, getDataPoints, fixColumeData, calLegendData } from './charts-data'
 import { measureText, calRotateTranslate } from './charts-util'
 import Util from '../util/util'
-import drawPointShape from './draw-data-shape'
+import { drawPointAtIndex, drawPointShape } from './draw-data-shape'
 import { drawPointText, drawPieText, drawRingTitle } from './draw-data-text'
 
 function drawYAxisTitle (title, opts, config, context) {
@@ -12,7 +12,7 @@ function drawYAxisTitle (title, opts, config, context) {
     context.setFillStyle(opts.yAxis.titleFontColor || '#333333');
     context.translate(0, opts.height);
     context.rotate(-90 * Math.PI / 180);
-    context.fillText(title, startX, config.padding + 0.5 * config.fontSize);
+    context.fillText(title, startX, config.paddingLeft + 0.5 * config.fontSize);
     context.stroke();
     context.closePath();
     context.restore();
@@ -23,7 +23,7 @@ export function drawColumnDataPoints (series, opts, config, context, process = 1
     let { xAxisPoints, eachSpacing } = getXAxisPoints(opts.categories, opts, config);
     let minRange = ranges.pop();
     let maxRange = ranges.shift();
-    let endY = opts.height - config.padding - config.xAxisHeight - config.legendHeight;
+    let endY = opts.height - config.paddingBottom - config.xAxisHeight - config.legendHeight;
 
     series.forEach(function(eachSeries, seriesIndex) {
         let data = eachSeries.data;
@@ -36,7 +36,7 @@ export function drawColumnDataPoints (series, opts, config, context, process = 1
         points.forEach(function(item, index) {
             if (item !== null) { 
                 let startX = item.x - item.width / 2 + 1;
-                let height = opts.height - item.y - config.padding - config.xAxisHeight - config.legendHeight;
+                let height = opts.height - item.y - config.paddingBottom - config.xAxisHeight - config.legendHeight;
                 context.moveTo(startX, item.y);
                 context.rect(startX, item.y, item.width - 2, height);
             }
@@ -61,11 +61,15 @@ export function drawAreaDataPoints (series, opts, config, context, process = 1) 
     let { xAxisPoints, eachSpacing } = getXAxisPoints(opts.categories, opts, config);
     let minRange = ranges.pop();
     let maxRange = ranges.shift();
-    let endY = opts.height - config.padding - config.xAxisHeight - config.legendHeight;
+    let endY = opts.height - config.paddingBottom - config.xAxisHeight - config.legendHeight;
+    const me = this;
 
     series.forEach(function(eachSeries, seriesIndex) {
         let data = eachSeries.data;
         let points = getDataPoints(data, minRange, maxRange, xAxisPoints, eachSpacing, opts, config, process);
+        me.chartData.seriesData[seriesIndex] = {
+            points: points
+        };
 
         let splitPointList = splitPoints(points);
 
@@ -124,11 +128,16 @@ export function drawLineDataPoints (series, opts, config, context, process = 1) 
     let { xAxisPoints, eachSpacing } = getXAxisPoints(opts.categories, opts, config);
     let minRange = ranges.pop();
     let maxRange = ranges.shift();
+    const me = this;
 
     series.forEach(function(eachSeries, seriesIndex) {
         let data = eachSeries.data;
         let points = getDataPoints(data, minRange, maxRange, xAxisPoints, eachSpacing, opts, config, process);
         let splitPointList = splitPoints(points);
+
+        me.chartData.seriesData[seriesIndex] = {
+            points: points
+        };
 
         splitPointList.forEach((points, index) => {
             context.beginPath();
@@ -153,6 +162,16 @@ export function drawLineDataPoints (series, opts, config, context, process = 1) 
         if (opts.dataPointShape !== false) {        
             let shape = config.dataPointShape[seriesIndex % config.dataPointShape.length];
             drawPointShape(points, eachSeries.color, shape, context);
+        } else if(eachSeries.showPointAtIndex) {
+            let dataPointShape;
+            //在某个坐标显示点
+            if(eachSeries.dataPointShape.indexOf("image://") == 0) {
+                dataPointShape = eachSeries.dataPointShape.slice(8);
+            } else {
+                dataPointShape = config.dataPointShape[seriesIndex % config.dataPointShape.length];
+            }
+
+            drawPointAtIndex(points[eachSeries.showPointAtIndex], dataPointShape, context);
         }
     });
     if (opts.dataLabel !== false && process === 1) {
@@ -168,7 +187,7 @@ export function drawLineDataPoints (series, opts, config, context, process = 1) 
 
 export function drawXAxis (categories, opts, config, context) {
     let { xAxisPoints, startX, endX, eachSpacing } = getXAxisPoints(categories, opts, config);
-    let startY = opts.height - config.padding - config.xAxisHeight - config.legendHeight;
+    let startY = opts.height - config.paddingBottom - config.xAxisHeight - config.legendHeight;
     let endY = startY + config.xAxisLineHeight;
 
     context.beginPath();
@@ -195,7 +214,7 @@ export function drawXAxis (categories, opts, config, context) {
     context.stroke();
 
     // 对X轴列表做抽稀处理
-    let validWidth = opts.width - 2 * config.padding - config.yAxisWidth - config.yAxisTitleWidth;
+    let validWidth = opts.width - config.paddingLeft - config.paddingRight - config.yAxisWidth - config.yAxisTitleWidth;
     let maxXAxisListLength = Math.min(categories.length, Math.ceil(validWidth / config.fontSize / 1.5));
     let ratio = Math.ceil(categories.length / maxXAxisListLength);
 
@@ -239,12 +258,12 @@ export function drawYAxis (series, opts, config, context) {
     let { rangesFormat } = calYAxisData(series, opts, config);
     let yAxisTotalWidth = config.yAxisWidth + config.yAxisTitleWidth;
 
-    let spacingValid = opts.height - 2 * config.padding - config.xAxisHeight - config.legendHeight;
+    let spacingValid = opts.height - config.paddingTop - config.paddingBottom - config.xAxisHeight - config.legendHeight;
     let eachSpacing = Math.floor(spacingValid / config.yAxisSplit);
-    let startX = config.padding + yAxisTotalWidth;
-    let endX = opts.width - config.padding;
-    let startY = config.padding;
-    let endY = opts.height - config.padding - config.xAxisHeight - config.legendHeight;
+    let startX = config.paddingLeft + yAxisTotalWidth;
+    let endX = opts.width - config.paddingRight;
+    let startY = config.paddingTop;
+    let endY = opts.height - config.paddingBottom - config.xAxisHeight - config.legendHeight;
 
     let points = [];
     for (let i = 0; i < config.yAxisSplit; i++) {
@@ -265,7 +284,7 @@ export function drawYAxis (series, opts, config, context) {
     context.setFillStyle(opts.yAxis.fontColor || '#666666')
     rangesFormat.forEach(function(item, index) {
         let pos = points[index] ? points[index] : endY;
-        context.fillText(item, config.padding + config.yAxisTitleWidth, pos + config.fontSize / 2);
+        context.fillText(item, config.paddingLeft + config.yAxisTitleWidth, pos + config.fontSize / 2);
     });
     context.closePath();
     context.stroke();
@@ -294,7 +313,7 @@ export function drawLegend (series, opts, config, context) {
             width += 3 * padding + measureText(item.name) + shapeWidth;
         });
         let startX = (opts.width - width) / 2 + padding;
-        let startY = opts.height - config.padding - config.legendHeight + listIndex * (config.fontSize + marginTop) + padding + marginTop;
+        let startY = opts.height - config.paddingBottom - config.legendHeight + listIndex * (config.fontSize + marginTop) + padding + marginTop;
 
         context.setFontSize(config.fontSize);
         itemList.forEach(function (item) {
@@ -402,5 +421,7 @@ export function drawPieDataPoints (series, opts, config, context, process = 1) {
 }
 
 export function drawCanvas (opts, context) {
-    context.draw();
+    setTimeout(() => {
+        context.draw();
+    }, 1000)
 }

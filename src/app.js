@@ -22,7 +22,9 @@ let Charts = function(opts) {
     this.context = wx.createCanvasContext(opts.canvasId);
     // store calcuated chart data
     // such as chart point coordinate
-    this.chartData = {};
+    this.chartData = {
+        seriesData: []
+    };
     this.event = new Event();
 
     drawCharts.call(this, opts.type, opts, config, this.context);
@@ -56,6 +58,10 @@ Charts.prototype.getCurrentDataIndex = function (e) {
         }
     }
     return -1;
+}
+
+Charts.prototype.getSeriesData = function() {
+    return this.chartData.seriesData;
 }
 
 export default Charts;

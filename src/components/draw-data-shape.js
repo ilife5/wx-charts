@@ -1,4 +1,4 @@
-export default function drawPointShape (points, color, shape, context) {
+export function drawPointShape (points, color, shape, context) {
     context.beginPath();
     context.setStrokeStyle("#ffffff");
     context.setLineWidth(1);
@@ -41,4 +41,15 @@ export default function drawPointShape (points, color, shape, context) {
     context.closePath();
     context.fill();
     context.stroke();
+}
+
+export function drawPointAtIndex(point, url, context) {
+
+    wx.getImageInfo({
+        src: url,
+        success: function (res) {
+            context.drawImage(res.path, point.x - 10, point.y - 10, 20, 20);
+        }
+    })
+
 }
