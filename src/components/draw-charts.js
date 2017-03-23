@@ -1,4 +1,4 @@
-import { drawCanvas, drawLegend, drawPieDataPoints, drawLineDataPoints, drawAreaDataPoints, drawColumnDataPoints, drawYAxis, drawXAxis } from './draw'
+import { drawCanvas, drawTrendDataPoints, drawLegend, drawPieDataPoints, drawLineDataPoints, drawAreaDataPoints, drawColumnDataPoints, drawYAxis, drawXAxis } from './draw'
 import { calYAxisData, getPieTextMaxLength, calCategoriesData, calLegendData } from './charts-data'
 import { fillSeriesColor } from './charts-util';
 import Animation from './animation'
@@ -34,6 +34,22 @@ export default function drawCharts (type, opts, config, context) {
                     drawXAxis(categories, opts, config, context);
                     this.chartData.xAxisPoints = drawLineDataPoints.call(this, series, opts, config, context, process);
                     drawLegend(opts.series, opts, config, context);                    
+                    drawCanvas(opts, context);
+                },
+                onAnimationFinish: () => {
+                    this.event.trigger('renderComplete');
+                }
+            });
+            break;
+        case 'trend':
+            this.animationInstance = new Animation({
+                timing: 'easeIn',
+                duration: duration,
+                onProcess: (process) => {
+                    drawYAxis(series, opts, config, context);
+                    drawXAxis(categories, opts, config, context);
+                    this.chartData.xAxisPoints = drawTrendDataPoints.call(this, series, opts, config, context, process);
+                    drawLegend(opts.series, opts, config, context);
                     drawCanvas(opts, context);
                 },
                 onAnimationFinish: () => {

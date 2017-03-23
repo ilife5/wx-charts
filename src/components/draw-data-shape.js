@@ -1,55 +1,39 @@
-export function drawPointShape (points, color, shape, context) {
+import { convertHex, calculate } from "../util/util";
+import Points from "../plugins/points";
+
+export function drawPointShape(points, color, shape, context) {
     context.beginPath();
-    context.setStrokeStyle("#ffffff");
-    context.setLineWidth(1);
+    const pointPlugin = Points[shape];
+    context.setStrokeStyle(calculate(pointPlugin.strokeStyle, color));
+    context.setLineWidth(calculate(pointPlugin.lineWidth, color));
     context.setFillStyle(color);
 
-    if (shape === 'diamond') {
-        points.forEach(function(item, index) {
-            if (item !== null) {
-                context.moveTo(item.x, item.y - 4.5);
-                context.lineTo(item.x - 4.5, item.y);
-                context.lineTo(item.x, item.y + 4.5);
-                context.lineTo(item.x + 4.5, item.y);
-                context.lineTo(item.x, item.y - 4.5);
-            }
-        });
-    } else if (shape === 'circle') {
-        points.forEach(function(item, index) {
-            if (item !== null) {
-                context.moveTo(item.x + 3.5, item.y)
-                context.arc(item.x, item.y, 4, 0, 2 * Math.PI, false)
-            }
-        });
-    } else if (shape === 'rect') {
-        points.forEach(function(item, index) {
-            if (item !== null) {
-                context.moveTo(item.x - 3.5, item.y - 3.5);
-                context.rect(item.x - 3.5, item.y - 3.5, 7, 7);
-            }
-        });
-    } else if (shape === 'triangle') {
-        points.forEach(function(item, index) {
-            if (item !== null) {
-                context.moveTo(item.x, item.y - 4.5);
-                context.lineTo(item.x - 4.5, item.y + 4.5);
-                context.lineTo(item.x + 4.5, item.y + 4.5);
-                context.lineTo(item.x, item.y - 4.5);
-            }
-        });
-    }
+    points.forEach(item => {
+        if (item !== null) {
+            pointPlugin.draw(item, context);
+        }
+    });
+
     context.closePath();
     context.fill();
     context.stroke();
 }
 
-export function drawPointAtIndex(point, url, context) {
+export function drawPointAtIndex(point, color, shape, context) {
 
-    wx.getImageInfo({
-        src: url,
-        success: function (res) {
-            context.drawImage(res.path, point.x - 10, point.y - 10, 20, 20);
-        }
-    })
+    const pointPlugin = Points[shape];
+
+    context.beginPath();
+    context.setStrokeStyle(calculate(pointPlugin.strokeStyle, color));
+    context.setLineWidth(calculate(pointPlugin.lineWidth, color));
+    context.setFillStyle(color);
+
+    if (point !== null) {
+        pointPlugin.draw(point, context);
+    }
+
+    context.closePath();
+    context.fill();
+    context.stroke();
 
 }

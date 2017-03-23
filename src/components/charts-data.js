@@ -163,7 +163,7 @@ export function fixColumeData(points, eachSpacing, columnLen, index, config) {
             return null;
         }
         item.width = (eachSpacing - 2 * config.columePadding) / columnLen;
-        item.width = Math.min(item.width, 25);
+        item.width = item.width;
         item.x += (index + 0.5 - (columnLen) / 2) * item.width;
 
         return item;
@@ -174,7 +174,7 @@ export function getXAxisPoints(categories, opts, config) {
     let yAxisTotalWidth = config.yAxisWidth + config.yAxisTitleWidth;
     let startX = config.paddingLeft + yAxisTotalWidth;
     let endX = opts.width - config.paddingRight;
-    let spacingValid = endX - startX - opts.paddingRight || 0;
+    let spacingValid = endX - startX - ( opts.paddingRight || 0 );
     let eachSpacing = spacingValid / categories.length;
     let xAxisPoints = [];
 
